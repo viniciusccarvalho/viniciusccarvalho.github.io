@@ -1,16 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[My Octopress Blog]]></title>
+  <title><![CDATA[Developer's guild]]></title>
   <link href="http://viniciusccarvalho.github.io/atom.xml" rel="self"/>
   <link href="http://viniciusccarvalho.github.io/"/>
-  <updated>2014-11-13T16:44:23-05:00</updated>
+  <updated>2014-11-13T17:29:24-05:00</updated>
   <id>http://viniciusccarvalho.github.io/</id>
   <author>
-    <name><![CDATA[Your Name]]></name>
+    <name><![CDATA[Vinicius Carvalho]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[RXJava - Simple Concurrency Usage]]></title>
+    <link href="http://viniciusccarvalho.github.io/blog/2014/11/13/rxjava-simple-concurrency-usage/"/>
+    <updated>2014-11-13T17:03:51-05:00</updated>
+    <id>http://viniciusccarvalho.github.io/blog/2014/11/13/rxjava-simple-concurrency-usage</id>
+    <content type="html"><![CDATA[<div><script src='https://gist.github.com/bbada1e463baf61b2088.js'></script>
+<noscript><pre><code>package us.devguild.reactive.mongo;
+
+import org.springframework.stereotype.Component;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.DB;
+import rx.Observable;
+
+@Component
+public class ObservableMongo {
+    
+    
+    private DB mongoDB;
+    
+      @Autowired
+    public ObservableMongo(DB db){
+        this.mongoDB = db;
+    }
+    
+    public Observable&lt;DBObject&gt; toObservable(String collection, DBObject query){
+        
+        return Observable.create(subscriber -&gt; {
+            DBObject dbo = null;
+            try {
+                DBCollection dbCol = mongoDB.getCollection(collection);
+                final DBCursor cursor = dbCol.find(query);
+                while(cursor.hasNext()){
+                    dbo = cursor.next();
+                    subscriber.onNext(dbo);
+                }
+                subscriber.onCompleted();
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
+            
+        });
+    }
+    
+}
+</code></pre></noscript></div>
+
+
+
+
+<div><script src='https://gist.github.com/c10bb46f02cdca9b5ee9.js'></script>
+<noscript><pre><code>package us.devguild.reactive.web.client;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.google.common.util.concurrent.RateLimiter;
+
+@Component
+public class RateLimitedTemplate {
+
+    private RateLimiter limiter; 
+    
+    private RestTemplate template;
+    
+    
+    @Autowired
+    public RateLimitedTemplate(RestTemplate template) {
+        this.limiter = RateLimiter.create(3.0);;
+        this.template = template;
+    }
+
+
+
+    public &lt;T&gt; T get(String url, Map&lt;String,Object&gt; params, Class&lt;T&gt; type){
+        limiter.acquire();
+        return template.getForEntity(url, type,params).getBody();
+    }
+    
+}   
+</code></pre></noscript></div>
+
+
+
+]]></content>
+  </entry>
   
 </feed>
