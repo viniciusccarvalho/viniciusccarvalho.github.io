@@ -9,8 +9,7 @@
   <meta name="author" content="Vinicius Carvalho">
 
   
-  <meta name="description" content="package us.devguild.reactive.mongo; import org.springframework.stereotype.Component; import com.mongodb.DBCollection;
-import com.mongodb.DBCursor; &hellip;">
+  <meta name="description" content="Simplifying concurrency I&rsquo;ve been playing with RXJava for a while now. Concurreny has always been a facinating topic to me. I read Brian Goetz& &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -86,7 +85,27 @@ import com.mongodb.DBCursor; &hellip;">
   </header>
 
 
-  <div class="entry-content"><div><script src='https://gist.github.com/bbada1e463baf61b2088.js'></script>
+  <div class="entry-content"><h2>Simplifying concurrency</h2>
+
+<p>I&rsquo;ve been playing with <a href="https://github.com/ReactiveX/RxJava/wiki">RXJava</a> for a while now. Concurreny has always been a facinating topic to me. I read Brian Goetz&rsquo;s <a href="http://www.amazon.com/Java-Concurrency-Practice-Brian-Goetz/dp/0321349601">Java Concurrency in practice</a> several times, and if you are a java developer and you haven&rsquo;t, shame on you :-(</p>
+
+<p>This post is not meant to go on any discussion around concurrent vs parallel, read this: <a href="http://www.nada.kth.se/~snilsson/concurrency/">fundamentals of concurrent programming</a> and watch Rob Pike&rsquo;s <a href="https://www.youtube.com/watch?v=cN_DpYBzKso">Concurrency is not Parallelism</a></p>
+
+<p>Instead I just want to share some code I wrote to solve a simple problem that was taking me way more time than needed by using traditional java constructs to deal with parallism (Executors, BlockingQueues, Runnables and CountDownLatches)</p>
+
+<h3>The problem</h3>
+
+<p>I&rsquo;m building a demo to show how amazing <a href="http://projects.spring.io/spring-boot/">Spring Boot</a>, <a href="http://projects.spring.io/spring-cloud/">Spring cloud</a> and <a href="http://www.pivotal.io/platform-as-a-service/pivotal-cf">Cloud Foundry</a> are when combined together to build next generation applications.</p>
+
+<p>The demo uses data from <a href="https://www.themoviedb.org/">The Movie Database project</a>. Collecting the data needs to respect a rate limit of
+3 requests per second.</p>
+
+<p>So the problem is: download a maximum number of data in parallel while respecting the limits of the API. After downloading the data, load it
+on a mongo db collection, but transform it to store only parts of data.</p>
+
+<p>Starting with the basics I created a class that transforms a mongodb cursor into an Observable:</p>
+
+<div><script src='https://gist.github.com/bbada1e463baf61b2088.js?file=ObservableMongo.java'></script>
 <noscript><pre><code>package us.devguild.reactive.mongo;
 
 import org.springframework.stereotype.Component;
@@ -103,7 +122,7 @@ public class ObservableMongo {
     
     private DB mongoDB;
     
-      @Autowired
+       @Autowired
     public ObservableMongo(DB db){
         this.mongoDB = db;
     }
@@ -131,9 +150,12 @@ public class ObservableMongo {
 </code></pre></noscript></div>
 
 
+<p>In order to control the limit of access per second I&rsquo;ve relied on <a href="https://code.google.com/p/guava-libraries/">Guava</a> Rate limiter, I&rsquo;m
+assuming it uses some sort of <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a> to control, but who cares :). Note that this is a
+form of Callstack blocking as discussed on <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure">RXJava Backpressure documentation</a>, it worked
+fine for me for the moment:</p>
 
-
-<div><script src='https://gist.github.com/c10bb46f02cdca9b5ee9.js'></script>
+<div><script src='https://gist.github.com/c10bb46f02cdca9b5ee9.js?file=RateLimitedTemplate.java'></script>
 <noscript><pre><code>package us.devguild.reactive.web.client;
 
 import java.util.Map;
@@ -169,6 +191,42 @@ public class RateLimitedTemplate {
 </code></pre></noscript></div>
 
 
+<p>And finally the small snippet that loads the data:</p>
+
+<div><script src='https://gist.github.com/ba3a79089af37c2a51ed.js?file=TMDBLoader.java'></script>
+<noscript><pre><code>
+public void loadImages() {
+    DBCollection imagesCol = mongoTemplate.getDb().getCollection(&quot;images&quot;);
+    Observable&lt;DBObject&gt; source = observableMongo.toObservable(&quot;movies&quot;, new BasicDBObject(&quot;images&quot;, new BasicDBObject(&quot;$eq&quot;, null))).subscribeOn(Schedulers.io());
+    source.parallel(f -&gt; {
+            return f.map(dbo -&gt; {
+                Map params = new HashMap(); 
+                Map result = null;
+                params.put(&quot;api_key&quot;, TMDBClient.API_KEY);
+                params.put(&quot;id&quot;,dbo.get(&quot;_id&quot;));
+                result = template.get(TMDBClient.IMAGES_URL, params, Map.class);
+                return result;
+            }).subscribeOn(Schedulers.computation());
+        }).toBlocking().forEach(response -&gt; {
+            imagesCol.save(new BasicDBObject(response));
+        });
+    
+}</code></pre></noscript></div>
+
+
+<p>We start from a pre-populated DB with movies, and look for those which images have not been loaded yet. That returns our observable. From that
+observable we use the parallel operator to execute the subscription on a separate thread. The rate limited client will take care of blocking calls
+to respect the limit. Finally we transform the observable into a BlockingObservable and persist each response back on the database on a different
+collection.</p>
+
+<p>I&rsquo;m not sure about you, but before using RXJava to do this I would need a bunch of different constructs to fullfil the exact same purpose.</p>
+
+<h3>Further reading</h3>
+
+<ul>
+<li><a href="http://www.grahamlea.com/2014/07/rxjava-threading-examples/">RX Java threading examples</a> : Great example on how threading works on RX Java</li>
+<li><a href="http://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/">Java 8 stream tutorials</a> : If you need to get up to speed with lambdas and java 8.</li>
+</ul>
 
 </div>
   
