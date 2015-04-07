@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Developer&#8217;s guild</title>
+  <meta name="author" content="Vinicius Carvalho">
+
+  
+  <meta name="description" content="Simplifying concurrency I&rsquo;ve been playing with RXJava for a while now. Concurreny has always been a facinating topic to me. I read Brian Goetz& &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://viniciusccarvalho.github.io">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="Developer's guild" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">Developer&#8217;s guild</a></h1>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="https://www.google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="q" value="site:viniciusccarvalho.github.io" />
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div class="blog-index">
+  
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2014/11/13/rxjava-simple-concurrency-usage/">RXJava - Simple Concurrency Usage</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2014-11-13T17:03:51-05:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:03 pm</span></time>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>Simplifying concurrency</h2>
+
+<p>I&rsquo;ve been playing with <a href="https://github.com/ReactiveX/RxJava/wiki">RXJava</a> for a while now. Concurreny has always been a facinating topic to me. I read Brian Goetz&rsquo;s <a href="http://www.amazon.com/Java-Concurrency-Practice-Brian-Goetz/dp/0321349601">Java Concurrency in practice</a> several times, and if you are a java developer and you haven&rsquo;t, shame on you :-(</p>
+
+<p>This post is not meant to go on any discussion around concurrent vs parallel, read this: <a href="http://www.nada.kth.se/~snilsson/concurrency/">fundamentals of concurrent programming</a> and watch Rob Pike&rsquo;s <a href="https://www.youtube.com/watch?v=cN_DpYBzKso">Concurrency is not Parallelism</a></p>
+
+<p>Instead I just want to share some code I wrote to solve a simple problem that was taking me way more time than needed by using traditional java constructs to deal with parallism (Executors, BlockingQueues, Runnables and CountDownLatches)</p>
+
+<h3>The problem</h3>
+
+<p>I&rsquo;m building a demo to show how amazing <a href="http://projects.spring.io/spring-boot/">Spring Boot</a>, <a href="http://projects.spring.io/spring-cloud/">Spring cloud</a> and <a href="http://www.pivotal.io/platform-as-a-service/pivotal-cf">Cloud Foundry</a> are when combined together to build next generation applications.</p>
+
+<p>The demo uses data from <a href="https://www.themoviedb.org/">The Movie Database project</a>. Collecting the data needs to respect a rate limit of
+3 requests per second.</p>
+
+<p>So the problem is: download a maximum number of data in parallel while respecting the limits of the API. After downloading the data, load it
+on a mongo db collection, but transform it to store only parts of data.</p>
+
+<p>Starting with the basics I created a class that transforms a mongodb cursor into an Observable:</p>
+
+<div><script src='https://gist.github.com/bbada1e463baf61b2088.js?file=ObservableMongo.java'></script>
+<noscript><pre><code>package us.devguild.reactive.mongo;
+
+import org.springframework.stereotype.Component;
+
+import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
+import com.mongodb.DBObject;
+import com.mongodb.DB;
+import rx.Observable;
+
+@Component
+public class ObservableMongo {
+    
+    
+    private DB mongoDB;
+    
+       @Autowired
+    public ObservableMongo(DB db){
+        this.mongoDB = db;
+    }
+    
+    public Observable&lt;DBObject&gt; toObservable(String collection, DBObject query){
+        
+        return Observable.create(subscriber -&gt; {
+            DBObject dbo = null;
+            try {
+                DBCollection dbCol = mongoDB.getCollection(collection);
+                final DBCursor cursor = dbCol.find(query);
+                while(cursor.hasNext()){
+                    dbo = cursor.next();
+                    subscriber.onNext(dbo);
+                }
+                subscriber.onCompleted();
+            } catch (Exception e) {
+                subscriber.onError(e);
+            }
+            
+        });
+    }
+    
+}
+</code></pre></noscript></div>
+
+
+<p>In order to control the limit of access per second I&rsquo;ve relied on <a href="https://code.google.com/p/guava-libraries/">Guava</a> Rate limiter, I&rsquo;m
+assuming it uses some sort of <a href="http://en.wikipedia.org/wiki/Token_bucket">Token Bucket</a> to control, but who cares :). Note that this is a
+form of Callstack blocking as discussed on <a href="https://github.com/ReactiveX/RxJava/wiki/Backpressure">RXJava Backpressure documentation</a>, it worked
+fine for me for the moment:</p>
+
+<div><script src='https://gist.github.com/c10bb46f02cdca9b5ee9.js?file=RateLimitedTemplate.java'></script>
+<noscript><pre><code>package us.devguild.reactive.web.client;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
+
+import com.google.common.util.concurrent.RateLimiter;
+
+@Component
+public class RateLimitedTemplate {
+
+    private RateLimiter limiter; 
+    
+    private RestTemplate template;
+    
+    
+    @Autowired
+    public RateLimitedTemplate(RestTemplate template) {
+        this.limiter = RateLimiter.create(3.0);;
+        this.template = template;
+    }
+
+
+
+    public &lt;T&gt; T get(String url, Map&lt;String,Object&gt; params, Class&lt;T&gt; type){
+        limiter.acquire();
+        return template.getForEntity(url, type,params).getBody();
+    }
+    
+}   
+</code></pre></noscript></div>
+
+
+<p>And finally the small snippet that loads the data:</p>
+
+<div><script src='https://gist.github.com/ba3a79089af37c2a51ed.js?file=TMDBLoader.java'></script>
+<noscript><pre><code>
+public void loadImages() {
+    DBCollection imagesCol = mongoTemplate.getDb().getCollection(&quot;images&quot;);
+    Observable&lt;DBObject&gt; source = observableMongo.toObservable(&quot;movies&quot;, new BasicDBObject(&quot;images&quot;, new BasicDBObject(&quot;$eq&quot;, null))).subscribeOn(Schedulers.io());
+    source.parallel(f -&gt; {
+            return f.map(dbo -&gt; {
+                Map params = new HashMap(); 
+                Map result = null;
+                params.put(&quot;api_key&quot;, TMDBClient.API_KEY);
+                params.put(&quot;id&quot;,dbo.get(&quot;_id&quot;));
+                result = template.get(TMDBClient.IMAGES_URL, params, Map.class);
+                return result;
+            }).subscribeOn(Schedulers.computation());
+        }).toBlocking().forEach(response -&gt; {
+            imagesCol.save(new BasicDBObject(response));
+        });
+    
+}</code></pre></noscript></div>
+
+
+<p>We start from a pre-populated DB with movies, and look for those which images have not been loaded yet. That returns our observable. From that
+observable we use the parallel operator to execute the subscription on a separate thread. The rate limited client will take care of blocking calls
+to respect the limit. Finally we transform the observable into a BlockingObservable and persist each response back on the database on a different
+collection.</p>
+
+<p>I&rsquo;m not sure about you, but before using RXJava to do this I would need a bunch of different constructs to fullfil the exact same purpose.</p>
+
+<h3>Further reading</h3>
+
+<ul>
+<li><a href="http://www.grahamlea.com/2014/07/rxjava-threading-examples/">RX Java threading examples</a> : Great example on how threading works on RX Java</li>
+<li><a href="http://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/">Java 8 stream tutorials</a> : If you need to get up to speed with lambdas and java 8.</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
+  
+  <div class="pagination">
+    
+    <a href="/blog/archives">Blog Archives</a>
+    
+  </div>
+</div>
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2014/11/13/rxjava-simple-concurrency-usage/">RXJava - Simple Concurrency Usage</a>
+      </li>
+    
+  </ul>
+</section>
+
+
+
+
+
+  
+</aside>
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2014 - Vinicius Carvalho -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+
+
+
+
+
+
+  <script type="text/javascript">
+    (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = '//platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+  </script>
+
+
+
+
+
+</body>
+</html>
