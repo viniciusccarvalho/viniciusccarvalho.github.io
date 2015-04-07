@@ -1,91 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
 
-<!DOCTYPE html>
-<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
-<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
-<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
-<head>
-  <meta charset="utf-8">
-  <title>Developer&#8217;s guild</title>
-  <meta name="author" content="Vinicius Carvalho">
-
-  
-  <meta name="description" content="Gemfire meets RXJava Gemfire is a very powerful IMDG solution. One of the many aspects that differentiate it from others in the space, is the great &hellip;">
-  
-
-  <!-- http://t.co/dKP3o1e -->
-  <meta name="HandheldFriendly" content="True">
-  <meta name="MobileOptimized" content="320">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  
-  <link rel="canonical" href="http://vcc.devguild.us">
-  <link href="/favicon.png" rel="icon">
-  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
-  <link href="/atom.xml" rel="alternate" title="Developer's guild" type="application/atom+xml">
-  <script src="/javascripts/modernizr-2.0.js"></script>
-  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-  <script>!window.jQuery && document.write(unescape('%3Cscript src="./javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
-  <script src="/javascripts/octopress.js" type="text/javascript"></script>
-  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
-<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
-
-  
-
-</head>
-
-<body   >
-  <header role="banner"><hgroup>
-  <h1><a href="/">Developer&#8217;s guild</a></h1>
-  
-</hgroup>
-
-</header>
-  <nav role="navigation"><ul class="subscription" data-subscription="rss">
-  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
-  
-</ul>
-  
-<form action="https://www.google.com/search" method="get">
-  <fieldset role="search">
-    <input type="hidden" name="q" value="site:vcc.devguild.us" />
-    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
-  </fieldset>
-</form>
-  
-<ul class="main-navigation">
-  <li><a href="/">Blog</a></li>
-  <li><a href="/blog/archives">Archives</a></li>
-</ul>
-
-</nav>
-  <div id="main">
-    <div id="content">
-      <div class="blog-index">
-  
-  
-  
-    <article>
-      
-  <header>
+  <title><![CDATA[Developer's guild]]></title>
+  <link href="http://vcc.devguild.us/atom.xml" rel="self"/>
+  <link href="http://vcc.devguild.us/"/>
+  <updated>2015-04-07T19:02:22-04:00</updated>
+  <id>http://vcc.devguild.us/</id>
+  <author>
+    <name><![CDATA[Vinicius Carvalho]]></name>
     
-      <h1 class="entry-title"><a href="/blog/2015/04/07/rxfire-gemfire-meets-rx/">RXFire - Gemfire Meets RX</a></h1>
-    
-    
-      <p class="meta">
-        
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
 
-
-
-
-<time class='entry-date' datetime='2015-04-07T18:14:45-04:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>6:14 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>Gemfire meets RXJava</h2>
+  
+  <entry>
+    <title type="html"><![CDATA[RXFire - Gemfire Meets RX]]></title>
+    <link href="http://vcc.devguild.us/blog/2015/04/07/rxfire-gemfire-meets-rx/"/>
+    <updated>2015-04-07T18:14:45-04:00</updated>
+    <id>http://vcc.devguild.us/blog/2015/04/07/rxfire-gemfire-meets-rx</id>
+    <content type="html"><![CDATA[<h2>Gemfire meets RXJava</h2>
 
 <p><a href="http://pivotal.io/big-data/pivotal-gemfire">Gemfire</a> is a very powerful IMDG solution. One of the many aspects that differentiate it from others in the space, is the great support for Continuous Queries.</p>
 
@@ -229,35 +162,15 @@ streams of data from a gemfire region into an Observable and then be able to pla
 <p>The real power of RX comes when you start combining multiple streams, imagine for a moment you had a second or a third stream from different gemfire regions, or even, as from my previous <a href="http://vcc.devguild.us/blog/2014/11/13/rxjava-simple-concurrency-usage/">post</a> you could combine a stream from MongoDB or from Twitter. Once you move your Iterables into Observables a new horizon opens for you.</p>
 
 <p>Cheers</p>
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/11/13/rxjava-simple-concurrency-usage/">RXJava - Simple Concurrency Usage</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-11-13T17:03:51-05:00'><span class='date'><span class='date-month'>Nov</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:03 pm</span></time>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h2>Simplifying concurrency</h2>
+  <entry>
+    <title type="html"><![CDATA[RXJava - Simple Concurrency Usage]]></title>
+    <link href="http://vcc.devguild.us/blog/2014/11/13/rxjava-simple-concurrency-usage/"/>
+    <updated>2014-11-13T17:03:51-05:00</updated>
+    <id>http://vcc.devguild.us/blog/2014/11/13/rxjava-simple-concurrency-usage</id>
+    <content type="html"><![CDATA[<h2>Simplifying concurrency</h2>
 
 <p>I&rsquo;ve been playing with <a href="https://github.com/ReactiveX/RxJava/wiki">RXJava</a> for a while now. Concurreny has always been a facinating topic to me. I read Brian Goetz&rsquo;s <a href="http://www.amazon.com/Java-Concurrency-Practice-Brian-Goetz/dp/0321349601">Java Concurrency in practice</a> several times, and if you are a java developer and you haven&rsquo;t, shame on you :-(</p>
 
@@ -400,72 +313,7 @@ collection.</p>
 <li><a href="http://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/">Java 8 stream tutorials</a> : If you need to get up to speed with lambdas and java 8.</li>
 </ul>
 
-</div>
+]]></content>
+  </entry>
   
-  
-
-
-    </article>
-  
-  <div class="pagination">
-    
-    <a href="/blog/archives">Blog Archives</a>
-    
-  </div>
-</div>
-<aside class="sidebar">
-  
-    <section>
-  <h1>Recent Posts</h1>
-  <ul id="recent_posts">
-    
-      <li class="post">
-        <a href="/blog/2015/04/07/rxfire-gemfire-meets-rx/">RXFire - Gemfire Meets RX</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/11/13/rxjava-simple-concurrency-usage/">RXJava - Simple Concurrency Usage</a>
-      </li>
-    
-  </ul>
-</section>
-
-
-
-
-
-  
-</aside>
-
-    </div>
-  </div>
-  <footer role="contentinfo"><p>
-  Copyright &copy; 2015 - Vinicius Carvalho -
-  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
-</p>
-
-</footer>
-  
-
-
-
-
-
-
-
-  <script type="text/javascript">
-    (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = '//platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
-  </script>
-
-
-
-
-
-</body>
-</html>
+</feed>
